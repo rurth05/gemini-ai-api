@@ -92,6 +92,32 @@ app.post("/generate-from-audio", upload.single("audio"), async (req, res) => {
   }
 });
 
+app.post("/api/chat", async (req, res) => {
+  const { conversation } = req.body;
+  try {
+    if (!Array.isArray(conversation))
+      throw new Error("conversation must be an array !");
+
+    const contents = conversation.map(({ role, text }) => ({
+      role,
+      parts: [{ text }],
+    }));
+
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents,
+      config: {
+        temperature: 0.9,
+        systemInstructions: "Jawab hanya menggunakan bahasa Indonesia.",
+      },
+    });
+    res.status(200).json({ result: response.text });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ message: e.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
